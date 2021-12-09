@@ -32,17 +32,17 @@ class Transformer(keras.Model):
 
     def create_masks(self, inp, tar):
         # Encoder padding mask
-        enc_padding_mask = create_padding_mask(inp)
+        enc_padding_mask = None
 
         # Used in the 2nd attention block in the decoder.
         # This padding mask is used to mask the encoder outputs.
-        dec_padding_mask = create_padding_mask(inp)
+        dec_padding_mask = None
 
         # Used in the 1st attention block in the decoder.
         # It is used to pad and mask future tokens in the input received by
         # the decoder.
         look_ahead_mask = create_look_ahead_mask(tf.shape(tar)[1])
-        dec_target_padding_mask = create_padding_mask(tar)
-        look_ahead_mask = tf.maximum(dec_target_padding_mask, look_ahead_mask)
+        look_ahead_mask = tf.expand_dims(look_ahead_mask, 0)
+        look_ahead_mask = tf.repeat(look_ahead_mask, tf.shape(tar)[0], axis=0)
 
         return enc_padding_mask, look_ahead_mask, dec_padding_mask
