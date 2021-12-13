@@ -5,14 +5,13 @@ from ml_util import create_padding_mask, create_look_ahead_mask
 
 
 class Transformer(keras.Model):
-    def __init__(self, num_layers, d_model, num_heads, dff, input_vocab_size,
-                 target_vocab_size, pe_input, pe_target, rate=0.1):
+    def __init__(self, num_layers, d_model, num_heads, dff, timesteps_pred, pe_input, pe_target, rate=0.1):
         super().__init__()
-        self.encoder = Encoder(num_layers, d_model, num_heads, dff, input_vocab_size, pe_input, rate)
+        self.encoder = Encoder(num_layers, d_model, num_heads, dff, pe_input, rate)
 
-        self.decoder = Decoder(num_layers, d_model, num_heads, dff, target_vocab_size, pe_target, rate)
+        self.decoder = Decoder(num_layers, d_model, num_heads, dff, pe_target, rate)
 
-        self.final_layer = keras.layers.Dense(target_vocab_size)
+        self.final_layer = keras.layers.Dense(timesteps_pred)
 
     def call(self, inputs, training):
         # Keras models prefer if you pass all your inputs in the first argument
