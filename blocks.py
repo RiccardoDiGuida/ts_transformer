@@ -43,7 +43,7 @@ class Encoder(layers.Layer):
         self.d_model = d_model
         self.num_layers = num_layers
 
-        # self.embedding = layers.Embedding(input_vocab_size, d_model)
+        # self.time2vec = Time2Vec(kernel_size=time2vec_dim)
         self.pos_encoding = positional_encoding(maximum_position_encoding,
                                                 self.d_model)
 
@@ -55,8 +55,8 @@ class Encoder(layers.Layer):
     def call(self, x, training, mask):
         seq_len = tf.shape(x)[1]
 
-        # adding embedding and position encoding.
-        # x = self.embedding(x)  # (batch_size, input_seq_len, d_model)
+        # time_embedding = layers.TimeDistributed(self.time2vec)(x)
+        # x = k.concatenate([x, time_embedding], -1)
         x *= tf.math.sqrt(tf.cast(self.d_model, tf.float32))
         x += self.pos_encoding[:, :seq_len, :]
 
@@ -111,7 +111,7 @@ class Decoder(layers.Layer):
         self.d_model = d_model
         self.num_layers = num_layers
 
-        # self.embedding = tf.keras.layers.Embedding(target_vocab_size, d_model)
+        # self.time2vec = Time2Vec(kernel_size=time2vec_dim)
         self.pos_encoding = positional_encoding(maximum_position_encoding, d_model)
 
         self.dec_layers = [DecoderLayer(d_model, num_heads, dff, rate)
@@ -122,7 +122,8 @@ class Decoder(layers.Layer):
         seq_len = tf.shape(x)[1]
         attention_weights = {}
 
-        # x = self.embedding(x)  # (batch_size, target_seq_len, d_model)
+        # time_embedding = layers.TimeDistributed(self.time2vec)(x)
+        # x = k.concatenate([x, time_embedding], -1)
         x *= tf.math.sqrt(tf.cast(self.d_model, tf.float32))
         x += self.pos_encoding[:, :seq_len, :]
 
