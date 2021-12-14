@@ -43,7 +43,7 @@ class Encoder(layers.Layer):
         self.d_model = d_model
         self.num_layers = num_layers
 
-        # self.time2vec = Time2Vec(kernel_size=time2vec_dim)
+        self.time2vec = Time2Vec(kernel_size=1)
         self.pos_encoding = positional_encoding(maximum_position_encoding,
                                                 self.d_model)
 
@@ -55,10 +55,10 @@ class Encoder(layers.Layer):
     def call(self, x, training, mask):
         seq_len = tf.shape(x)[1]
 
-        # time_embedding = layers.TimeDistributed(self.time2vec)(x)
-        # x = k.concatenate([x, time_embedding], -1)
-        x *= tf.math.sqrt(tf.cast(self.d_model, tf.float32))
-        x += self.pos_encoding[:, :seq_len, :]
+        time_embedding = layers.TimeDistributed(self.time2vec)(x)
+        x = k.backend.concatenate([x, time_embedding], -1)
+        # x *= tf.math.sqrt(tf.cast(self.d_model, tf.float32))
+        # x += self.pos_encoding[:, :seq_len, :]
 
         x = self.dropout(x, training=training)
 
@@ -111,7 +111,7 @@ class Decoder(layers.Layer):
         self.d_model = d_model
         self.num_layers = num_layers
 
-        # self.time2vec = Time2Vec(kernel_size=time2vec_dim)
+        self.time2vec = Time2Vec(kernel_size=1)
         self.pos_encoding = positional_encoding(maximum_position_encoding, d_model)
 
         self.dec_layers = [DecoderLayer(d_model, num_heads, dff, rate)
@@ -122,10 +122,10 @@ class Decoder(layers.Layer):
         seq_len = tf.shape(x)[1]
         attention_weights = {}
 
-        # time_embedding = layers.TimeDistributed(self.time2vec)(x)
-        # x = k.concatenate([x, time_embedding], -1)
-        x *= tf.math.sqrt(tf.cast(self.d_model, tf.float32))
-        x += self.pos_encoding[:, :seq_len, :]
+        time_embedding = layers.TimeDistributed(self.time2vec)(x)
+        x = k.backend.concatenate([x, time_embedding], -1)
+        # x *= tf.math.sqrt(tf.cast(self.d_model, tf.float32))
+        # x += self.pos_encoding[:, :seq_len, :]
 
         x = self.dropout(x, training=training)
 
@@ -156,11 +156,11 @@ class Time2Vec(layers.Layer):
 
     def call(self, inputs, **kwargs):
         bias = self.wb * inputs + self.bb
-        dp = k.dot(inputs, self.wa) + self.ba
-        wgts = k.sin(dp)  # or K.cos(.)
+        dp = k.backend.dot(inputs, self.wa) + self.ba
+        wgts = k.backend.sin(dp)  # or K.cos(.)
 
-        ret = k.concatenate([k.expand_dims(bias, -1), wgts], -1)
-        ret = k.reshape(ret, (-1, inputs.shape[1] * (self.ker + 1)))
+        ret = k.backend.concatenate([k.backend.expand_dims(bias, -1), wgts], -1)
+        ret = k.backend.reshape(ret, (-1, inputs.shape[1] * (self.ker + 1)))
         return ret
 
     def compute_output_shape(self, input_shape):

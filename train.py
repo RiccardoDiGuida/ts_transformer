@@ -38,13 +38,11 @@ def train(ds):
         return tf.reduce_sum(loss_)
 
     train_loss = tf.keras.metrics.Mean(name='train_loss')
-    train_accuracy = tf.keras.metrics.MeanSquaredError(name='train_accuracy')
 
     transformer = Transformer(num_layers=num_layers,
                               d_model=d_model,
                               num_heads=num_heads,
                               dff=dff,
-                              timesteps_pred=ds.element_spec[1].shape[0]-1,
                               pe_input=100,
                               pe_target=100,
                               rate=dropout_rate)
@@ -76,31 +74,29 @@ def train(ds):
         optimizer.apply_gradients(zip(gradients, transformer.trainable_variables))
 
         train_loss(loss)
-        train_accuracy(tar_real, predictions)
 
     BATCH_SIZE = 64
     SHUFFLE_BUFFER_SIZE = 100
 
     train_batches = ds.shuffle(SHUFFLE_BUFFER_SIZE).batch(BATCH_SIZE)
 
-    EPOCHS = 20
+    EPOCHS = 200
     for epoch in range(EPOCHS):
         start = time.time()
 
         train_loss.reset_states()
-        train_accuracy.reset_states()
 
         for (batch, (inp, tar)) in enumerate(train_batches):
             train_step(inp, tar)
 
             if batch % 50 == 0:
                 print(
-                    f'Epoch {epoch + 1} Batch {batch} Loss {train_loss.result():.4f} Accuracy {train_accuracy.result():.4f}')
+                    f'Epoch {epoch + 1} Batch {batch} Loss {train_loss.result():.4f}')
 
         if (epoch + 1) % 5 == 0:
             ckpt_save_path = ckpt_manager.save()
             print(f'Saving checkpoint for epoch {epoch + 1} at {ckpt_save_path}')
 
-        print(f'Epoch {epoch + 1} Loss {train_loss.result():.4f} Accuracy {train_accuracy.result():.4f}')
+        print(f'Epoch {epoch + 1} Loss {train_loss.result():.4f}')
 
         print(f'Time taken for 1 epoch: {time.time() - start:.2f} secs\n')

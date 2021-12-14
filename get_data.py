@@ -24,7 +24,7 @@ def shift(arr, num, timesteps):
     return arr[num:(num+timesteps)]
 
 
-def reshape_df(df_, timesteps_=7, steps_to_pred_=3):
+def reshape_df(df_, timesteps_=10, steps_to_pred_=3):
     windows = [shift(df_, i, timesteps_) for i in range(df_.shape[0] - timesteps_ - steps_to_pred_ + 1)]
     fitting_data = np.reshape(np.vstack(windows), (-1, timesteps_, df_.shape[1]))
 
